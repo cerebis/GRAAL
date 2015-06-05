@@ -1,5 +1,5 @@
+# coding=utf-8
 __author__ = 'hervemarie-nelly'
-# coding: utf-8
 
 import math, sys, time
 # import pp
