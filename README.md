@@ -6,11 +6,15 @@ Prerequisite file types to run this program.
 
 These appear to be tabulated data.
 
-*info contig.txt*
-```'contig','length_kb','n_frags','cumul_length'```
+*info_contig.txt*
+```python
+'contig','length_kb','n_frags','cumul_length'
+```
 
 *asm_fragments_contacts_weighted.txt*
-```'id', 'chrom','start_pos','end_pos','size','gc_content','accu_frag','init_frag_start,'init_frag_end','sub_frag_start','sub_frag_end'```
+```python
+'id', 'chrom','start_pos','end_pos','size','gc_content','accu_frag','init_frag_start,'init_frag_end','sub_frag_start','sub_frag_end'
+```
 
 Requirements (Hardware):
 ------------------------
