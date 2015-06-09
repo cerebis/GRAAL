@@ -13,7 +13,7 @@ These appear to be tabulated data.
 
 *asm_fragments_contacts_weighted.txt*
 ```python
-'id', 'chrom','start_pos','end_pos','size','gc_content','accu_frag','init_frag_start,'init_frag_end','sub_frag_start','sub_frag_end'
+'id', 'chrom','start_pos','end_pos','size','gc_content','accu_frag','init_frag_start','init_frag_end','sub_frag_start','sub_frag_end'
 ```
 
 Requirements (Hardware):
