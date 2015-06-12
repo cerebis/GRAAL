@@ -1,5 +1,5 @@
-# coding=utf-8
 __author__ = 'hervemarie-nelly'
+# coding: utf-8
 
 import math, sys, time
 # import pp
@@ -111,9 +111,15 @@ class simulation():
         self.sampler.gpu_vect_frags.copy_from_gpu()
         id_start = np.nonzero(self.sampler.gpu_vect_frags.start_bp == 0)[0]
         mean_dist_kb = self.sampler.gpu_vect_frags.l_cont_bp[id_start].mean() / 1000.
+        #mean_dist_kb = np.median(self.sampler.gpu_vect_frags.l_cont_bp[id_start]) / 1000.
+        print self.sampler.gpu_vect_frags.l_cont_bp[id_start].tolist()
         print "mean dist kb = ", mean_dist_kb
-        size_bin_kb = self.sampler.gpu_vect_frags.len_bp.mean() / 1000.0
+        print 'median dist kb = ', np.median(self.sampler.gpu_vect_frags.l_cont_bp[id_start]) / 1000.0
+        #size_bin_kb = self.sampler.gpu_vect_frags.len_bp.mean() / 1000.0
+        size_bin_kb = np.median(self.sampler.gpu_vect_frags.len_bp) / 1000.0
         print "mean size kb = ", size_bin_kb
+        print 'median size kb = ', np.median(self.sampler.gpu_vect_frags.len_bp) / 1000.0
+        print self.sampler.gpu_vect_frags.len_bp.tolist()
 
 
         if is_simu:
@@ -784,3 +790,4 @@ class simulation():
 
     def release(self):
         self.sampler.free_gpu()
+

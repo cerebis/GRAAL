@@ -1,5 +1,8 @@
 # coding: utf-8
 __author__ = 'hervemn'
+import sys
+
+
 import numpy as np
 import pycuda
 import pycuda.tools
@@ -710,7 +713,8 @@ class sampler():
         f = open(filename, 'r')
         fstr = "".join(f.readlines())
         #create the program
-        self.module = pycuda.compiler.SourceModule(fstr, no_extern_c=True, options=["-keep", "-m64", "-cubin"])
+        #self.module = pycuda.compiler.SourceModule(fstr, no_extern_c=True, options=["-keep", "-m64", "-cubin"])
+        self.module = pycuda.compiler.SourceModule(fstr, no_extern_c=True, options=["-keep", "-cubin"])
         # self.module = pycuda.compiler.SourceModule(fstr, no_extern_c=True,arch='sm_30',
         #                                            options=["-keep", "-m64", "-cubin"])
 
@@ -1769,11 +1773,22 @@ class sampler():
         to_gpu_cum_sum.extend(list(cum_sum)[:-1])
         self.np_gpu_cum_sum = np.array(to_gpu_cum_sum, dtype=np.int32)
         for i in xrange(0, self.n_new_frags):
-            pos = c.pos[i]
-            id_c = c.id_c[i]
-            id_d = c.id_d[i]
-            is_rep = c.rep[i]
-            pre_new_index[self.np_gpu_cum_sum[id_c] + pos] = (is_rep == 0) * id_d + (is_rep == 1) * -1
+            try:
+                pos = c.pos[i]
+                id_c = c.id_c[i]
+                id_d = c.id_d[i]
+                is_rep = c.rep[i]
+                pre_new_index[self.np_gpu_cum_sum[id_c] + pos] = (is_rep == 0) * id_d + (is_rep == 1) * -1
+            except IndexError as er:
+                print '-'*60
+                print 'Warning: caught error referencing an array. Seems to be a bug in the code.'
+                print er.msg
+                print 'Local Variables: id_c={0}, len(np_gpu_cum_sum)={1}, pos={2}, len(pre_new_index)={3}'.format(
+                    id_c, len(self.np_gpu_cum_sum), pos, len(pre_new_index))
+                print '-'*60
+                sys.exc_clear()
+                
+
         new_index = pre_new_index[pre_new_index >= 0]
         # print "gpu cum sum = ", np_gpu_cum_sum
         # print "len(id_start_ctg) = ", len(id_start_ctg)
@@ -2306,11 +2321,27 @@ class sampler():
         # pk = self.distri_frags[ori_id]['pk']**fact
         # distri = pk / pk.sum()
 
-        distri = self.distri_frags[ori_id]['pk']
+        distri = np.array(self.distri_frags[ori_id]['pk'], dtype=np.float64)
         n_max_candidates = min(delta, np.nonzero(distri != 0)[0].shape[0])
 
-        init_id = np.random.choice(self.distri_frags[ori_id]['xk'], n_max_candidates, p=distri,
+        try:
+            distri /= distri.sum()
+            init_id = np.random.choice(self.distri_frags[ori_id]['xk'], n_max_candidates, p=distri,
                                    replace=False)
+        except ValueError:
+            import traceback
+            import sys
+            print '-'*60
+            print 'distri_frags[ {0} ]= {1}'.format(ori_id, self.distri_frags[ori_id])
+            print 'n_max_candidates=',n_max_candidates
+            print 'distri={0}'.format(np.array_repr(distri))
+            print 'sum_distri={0}'.format(repr(distri.sum()))
+            print '-'*60
+            traceback.print_exc(file=sys.stderr)
+            print '-'*60
+            
+
+
         out = []
 
         if ori_id in self.id_frag_duplicated:

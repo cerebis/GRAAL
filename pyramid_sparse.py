@@ -1,5 +1,5 @@
+# coding=utf-8
 __author__ = 'hervemn'
-# coding: utf-8
 import os
 import encodings
 import shutil
@@ -31,9 +31,11 @@ def build_and_filter(base_folder, size_pyramid, factor):
     if not(os.path.exists(all_pyramid_folder)):
         os.mkdir(all_pyramid_folder)
     init_pyramid_folder = os.path.join(all_pyramid_folder, 'pyramid_' + str(1) + '_no_thresh')
+    
     if not(os.path.exists(init_pyramid_folder)):
         init_size_pyramid = 1
         build(base_folder, init_size_pyramid, factor, min_bin_per_contig,)
+
     init_pyramid_folder_level_0 = os.path.join(init_pyramid_folder, "level_0")
     contig_info = os.path.join(init_pyramid_folder_level_0, '0_contig_info.txt')
     fragments_list = os.path.join(init_pyramid_folder_level_0, '0_fragments_list.txt')
@@ -47,6 +49,7 @@ def build_and_filter(base_folder, size_pyramid, factor):
     pyramid_folder = os.path.join(all_pyramid_folder, 'pyramid_' + str(size_pyramid) + '_thresh_auto')
     if not(os.path.exists(pyramid_folder)):
         os.mkdir(pyramid_folder)
+
     level = 0
     pyramid_level_folder = os.path.join(pyramid_folder, "level_" + str(level))
     if not(os.path.exists(pyramid_level_folder)):
@@ -55,6 +58,7 @@ def build_and_filter(base_folder, size_pyramid, factor):
     current_contig_info = os.path.join(pyramid_level_folder, str(level) + "_contig_info.txt")
     current_frag_list = os.path.join(pyramid_level_folder, str(level) + "_fragments_list.txt")
     current_abs_fragments_contacts = os.path.join(pyramid_level_folder, str(level) + "_abs_frag_contacts.txt")
+
     if not(os.path.exists(current_contig_info) and os.path.exists(current_frag_list) and os.path.exists(current_abs_fragments_contacts)):
     # if not(os.path.exists(current_contig_info) and os.path.exists(current_frag_list)) :
         ###########################################
@@ -82,10 +86,12 @@ def build_and_filter(base_folder, size_pyramid, factor):
     pyramid_level_folder = os.path.join(pyramid_folder,"level_"+str(level))
     level_pyramid = str(level)+"_"
     sub_2_super_frag_index_file = os.path.join(pyramid_level_folder,level_pyramid+"sub_2_super_index_frag.txt")
+
     for level in xrange(0, size_pyramid):
         pyramid_level_folder = os.path.join(pyramid_folder,"level_"+str(level))
         if not(os.path.exists(pyramid_level_folder)):
             os.mkdir(pyramid_level_folder)
+
         level_pyramid = str(level)+"_"
         new_contig_list_file = os.path.join(pyramid_level_folder,level_pyramid+"contig_info.txt")
         new_fragments_list_file = os.path.join(pyramid_level_folder,level_pyramid+"fragments_list.txt")
@@ -1014,13 +1020,32 @@ class pyramid():
     def update_super_index_in_dict_contig(self, dict_frag, dict_contig):
         set_contig = set()
         for id in dict_frag.keys():
+
             id_frag = id
             frag = dict_frag[id_frag]
+            #print 'id_frag={0} frag={1}'.format(id_frag,frag)
+
             init_contig = dict_frag[id_frag]["init_contig"]
+            #print 'init_contig=',init_contig
+
             set_contig.add(init_contig)
             id_contig = dict_contig[init_contig]["id_contig"]
-            f = dict_contig[id_contig][frag["index"] - 1]
-            f.super_index = frag["super_index"]
+            #print 'id_contig={0} length of list={1}'.format(id_contig, len(dict_contig[id_contig]))
+
+            try:
+                f = dict_contig[id_contig][frag["index"] - 1]
+                f.super_index = frag["super_index"]
+            except IndexError as er:
+                if "index" not in frag:
+                    print "The dict frag has no key \"index\""
+                if id_contig not in dict_contig:
+                    print 'The dict dict_contig has no key \"{0}\"'.format(id_contig)
+                if frag['index']-1 not in dict_contig[id_contig]:
+                    print 'The collection dict_contig[{0}] has no key \"{1}\"'.format(id_contig, frag['index']-1)
+                    print 'Collection length was: {0}'.format(len(dict_contig[id_contig]))
+                import sys
+                sys.exit(1)
+
         # print "set conrigs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         # print set_contig
         for ele in set_contig:
@@ -1402,22 +1427,27 @@ class level():
         print "done!"
 
     def build_seq_per_bin(self, genome_fasta):
+        print "called build_seq_per_bin()"
         self.pyramid.load_reference_sequence(genome_fasta)
+        
         ContFrags = self.pyramid.spec_level[str(self.level)]["contigs_dict"]
         list_contigs = ContFrags.keys()
         list_contigs.sort()
 
-        list_contigs = self.pyramid.spec_level[str(self.level)]['contigs_dict'].keys()
-        list_contigs.sort()
+        # this appears redundant
+        #list_contigs = self.pyramid.spec_level[str(self.level)]['contigs_dict'].keys()
+        #list_contigs.sort()
+
         self.list_seq = []
         for cont in list_contigs:
             for frag in ContFrags[cont]:
+                if isinstance(frag, str):
+                    print 'Warning: variable frag with value \"{0}\" was of type str'.format(frag)
+                    continue
                 start = frag.start_pos
                 end = frag.end_pos
-                # print "init contig = ", frag.init_contig
                 init_contig = frag.init_contig
                 seq_frag = self.pyramid.dict_sequence_contigs[init_contig][start:end]
-                # print "len seq per frag = ", len(seq_frag)
                 self.list_seq.append(seq_frag)
 
     def generate_new_fasta(self, vect_frags, new_fasta, info_frags):
@@ -1479,3 +1509,4 @@ class level():
 
         handle_new_fasta.close()
         handle_info_frags.close()
+
